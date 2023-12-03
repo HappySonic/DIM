@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+        // Define animals and their characteristics
+        List<string> animals = new List<string> { "dog", "hamster", "fish", "parrot", "cat" };
+        Dictionary<string, Dictionary<string, int>> characteristics = new Dictionary<string, Dictionary<string, int>>
+        {
+            {"dog", new Dictionary<string, int> {
+                {"size", 3},
+                {"space", 4},
+                {"careDifficulty", 3},
+                {"hairAmount", 5},
+                {"foodAmount", 4},
+                {"longevity", 4}
+            }},
+            {"hamster", new Dictionary<string, int> {
+                {"size", 1},
+                {"space", 1},
+                {"careDifficulty", 2},
+                {"hairAmount", 1},
+                {"foodAmount", 2},
+                {"longevity", 2}
+            }},
+            {"fish", new Dictionary<string, int> {
+                {"size", 1},
+                {"space", 1},
+                {"careDifficulty", 1},
+                {"hairAmount", 1},
+                {"foodAmount", 1},
+                {"longevity", 1}
+            }},
+            {"parrot", new Dictionary<string, int> {
+                {"size", 2},
+                {"space", 3},
+                {"careDifficulty", 3},
+                {"hairAmount", 2},
+                {"foodAmount", 3},
+                {"longevity", 3}
+            }},
+            {"cat", new Dictionary<string, int> {
+                {"size", 3},
+                {"space", 3},
+                {"careDifficulty", 2},
+                {"hairAmount", 4},
+                {"foodAmount", 3},
+                {"longevity", 3}
+            }},
+        };
+
+        // Input values for characteristics weights
+        Dictionary<string, int> weights = new Dictionary<string, int>();
+        foreach (var characteristic in characteristics["dog"])
+        {
+            Console.Write($"Enter the weight for {characteristic.Key}: ");
+            weights[characteristic.Key] = int.Parse(Console.ReadLine());
+        }
+
+        // Input values for threshold limits
+        Console.Write("Enter the threshold limit for concordance (1 to 5, 5 being the best): ");
+        int concordanceThreshold = int.Parse(Console.ReadLine());
+
+        Console.Write("Enter the threshold limit for discordance (1 to 5, 5 being the best): ");
+        int discordanceThreshold = int.Parse(Console.ReadLine());
+
+        // Evaluate animals based on ELECTRE methodology
+        Dictionary<string, double> concordanceIndices = new Dictionary<string, double>();
+        Dictionary<string, double> discordanceIndices = new Dictionary<string, double>();
+        foreach (var animal in animals)
+        {
+            double concordanceSum = 0;
+            double discordanceMax = 0; // Correction: Initialize discordanceMax
+
+            foreach (var characteristic in characteristics[animal])
+            {
+                double normalizedValue = characteristic.Value / 5.0; // Normalize values between 0 and 1
+                concordanceSum += normalizedValue * weights[characteristic.Key];
+                discordanceMax = Math.Max(discordanceMax, Math.Abs(normalizedValue - concordanceThreshold) * weights[characteristic.Key]);
+            }
+
+            concordanceIndices[animal] = concordanceSum;
+            discordanceIndices[animal] = discordanceMax;
+        }
+
+        // Identify the outranking relationship
+        List<string> outranks = new List<string>();
+        foreach (var animal1 in animals)
+        {
+            bool isOutranked = false;
+            foreach (var animal2 in animals)
+            {
+                if (animal1 != animal2)
+                {
+                    if (concordanceIndices[animal1] >= concordanceIndices[animal2] && discordanceIndices[animal1] <= discordanceIndices[animal2])
+                    {
+                        isOutranked = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isOutranked)
+            {
+                outranks.Add(animal1);
+            }
+        }
+
+        // Display the results
+        Console.WriteLine("\nResults:");
+        foreach (var animal in animals)
+        {
+            Console.WriteLine($"{animal}: Concordance = {concordanceIndices[animal]}, Discordance = {discordanceIndices[animal]}");
+        }
+
+        // Find the best choice
+        Console.WriteLine("\nBest Choices (outranking others):");
+        foreach (var animal in outranks)
+        {
+            Console.WriteLine(animal);
+        }
+    }
+}
